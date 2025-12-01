@@ -1,12 +1,46 @@
+from db import همه_نام_ها
+from nlp import استخراج_نام_محصول, استخراج_ویژگی
+from compare import مقایسه
 import sqlite3
-conn=sqlite3.connect('products.db')
-cur=conn.cursor()
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS لپ تاپ (
-    ایدی INTEGER PRIMARY KEY,
-    اسم TEXT NOT NULL,
-    برند TEXT NOT NULL,
-    قیمت INTEGER PRIMARY KEY
-    )
-""")
+DB_PATH = "laptops.db"
+
+def ویژگی_لپتاپ(نام, ویژگی):
+    """
+    گرفتن مقدار ویژگی برای یک لپ‌تاپ از دیتابیس
+    خروجی: (نام لپ‌تاپ, مقدار ویژگی)
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute(f'SELECT {ویژگی} FROM "لپ تاپ ها" WHERE نام = ?', (نام,))
+    result = cur.fetchone()
+    conn.close()
+    if result:
+        return (نام, result[0])
+    else:
+        return (نام, None)
+
+def main():
+    # گرفتن متن کاربر
+    متن_کاربر = input("سوال خود را وارد کنید: ")
+
+    # گرفتن نام‌های شناخته‌شده از دیتابیس
+    نام‌ها = همه_نام_ها()
+
+    # استخراج نام لپ‌تاپ‌ها و ویژگی
+    محصولات = استخراج_نام_محصول(متن_کاربر, نام‌ها)
+    ویژگی = استخراج_ویژگی(متن_کاربر)
+
+    if not محصولات or not ویژگی:
+        print("نتوانستم لپ‌تاپ یا ویژگی مورد نظر را پیدا کنم.")
+        return
+
+    # گرفتن مقدار ویژگی برای هر لپ‌تاپ
+    اطلاعات = [ویژگی_لپتاپ(p, ویژگی) for p in محصولات]
+
+    # مقایسه و چاپ نتیجه
+    نتیجه = مقایسه(اطلاعات, ویژگی)
+    print(نتیجه)
+
+if __name__ == "__main__":
+    main()
